@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container emp-profile pb-3">
+    <form method="POST" action="." class="needs-validation" enctype='multipart/form-data'>
+        {% csrf_token %}
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <h5 class="text-muted text-center">Biometric Photo</h5><br>
+                <div>
+                    {% if name %}
+                    <div class="alert alert-warning" style="text-align: center;">
+                        <small>{{name}}</small>
+                    </div>
+                    {% endif %}
+                    <img src="{% static 'img/bio.jpg'%}" alt="" width="100%">
+                </div>
+                <div class="mt-3">
+                    <input type="file" name="image" accept="image/jpeg,image/png">
+                </div>
+            </div>
+
+        </div>
+        <div class="row justify-content-center">
+            <div class="mt-3">
+                <button type="submit" class="btn btn-outline-success mt-3">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock content %}
