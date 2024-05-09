@@ -68,4 +68,4 @@ Our ongoing development efforts focus on ensuring user privacy, adapting to dive
 This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ## Acknowledgments
-Special thanks to Leonardo Espinosa Leal, Truong An Pham from Arcada University of Applied Sciences and all contributors to the LFW dataset.
+Special thanks to ```Leonardo Espinosa Leal, Truong An Pham``` from Arcada University of Applied Sciences and all contributors to the LFW dataset.
