@@ -8,20 +8,22 @@ The Smart Demographic Recognition System enhances social connectivity by utilizi
 ### Prerequisites
 Before you can run the server, you'll need to install the required libraries and dependencies:
 
-```bash
 # Install essential face recognition libraries
+```bash
 pip install opencv-python dlib face_recognition
+```
 
 # Install other required packages
+```bash
 pip install -r requirements.txt
-
+```
 
 ### Starting the Server
 To start the Django server, run the following command, and Navigate to http://127.0.0.1:8000/ in your browser to access the application.
 
 ```bash
 python manage.py runserver
-
+```
 
 ### Usage
 ### Navigating the Website
@@ -41,6 +43,7 @@ NOTE: If the webcam does not activate, restart the server:
 
 ```bash
 python manage.py runserver
+```
 
 4) Add Employee:
 Enter new employee details through this interface.
