@@ -8,12 +8,12 @@ The Smart Demographic Recognition System enhances social connectivity by utilizi
 ### Prerequisites
 Before you can run the server, you'll need to install the required libraries and dependencies:
 
-# Install essential face recognition libraries
+### Install essential face recognition libraries
 ```bash
 pip install opencv-python dlib face_recognition
 ```
 
-# Install other required packages
+### Install other required packages
 ```bash
 pip install -r requirements.txt
 ```
@@ -25,7 +25,7 @@ To start the Django server, run the following command, and Navigate to http://12
 python manage.py runserver
 ```
 
-### Usage
+## Usage
 ### Navigating the Website
 1) Identify Faces:
 This feature activates the webcam to continuously detect faces. Leave this open in the background for ongoing face detection. To exit, focus on the webcam window and press Q.
@@ -58,14 +58,14 @@ OpenCV
 Facenet Model
 LFW Dataset
 
-### Contributing
+## Contributing
 We welcome contributions to improve accuracy, expand the dataset, and enhance data security. For more information, see CONTRIBUTING.md.
 
-### Challenges
+## Challenges
 Our ongoing development efforts focus on ensuring user privacy, adapting to diverse conditions, and optimizing performance across different hardware setups.
 
-### License
+## License
 This project is licensed under the MIT License - see the LICENSE.md file for details.
 
-### Acknowledgments
+## Acknowledgments
 Special thanks to Leonardo Espinosa Leal, Truong An Pham from Arcada University of Applied Sciences and all contributors to the LFW dataset.
