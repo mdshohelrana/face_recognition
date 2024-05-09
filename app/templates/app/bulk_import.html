@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+{% load static %}
+
+<head>
+    <title>Bulk Image Import</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+
+        #fileInput {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button-container button:hover {
+            background-color: #555;
+        }
+
+        #fileCount {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            font-size: 18px;
+            margin: 10px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #007bff, #0056b3);
+            color: white;
+            border: none;
+            text-decoration: none;
+            box-shadow: 0 4px 15px 0 rgba(0, 123, 255, 0.75);
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(to right, #0056b3, #007bff);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px 0 rgba(0, 123, 255, 0.75);
+        }
+    </style>
+</head>
+
+{% block content %}
+<input type="hidden" value="{{ foldername }}" readonly id="filenameInput">
+
+<div id="fileCount" style="padding-bottom: 10px;">Files Uploaded: 0</div>
+<input type="file" id="fileInput" accept="image/*" multiple>
+<div class="button-container">
+    <button class="btn" onclick="goBack()">Back</button>
+    <button class="btn" onclick="uploadImages()">Upload Images</button>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileCountElement = document.getElementById('fileCount');
+    let fileCount = 0;
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function uploadImages() {
+        const filename = filenameInput.value.trim();
+        const files = fileInput.files;
+        if (!files.length) {
+            alert('Please select one or more images to upload.');
+            return;
+        }
+
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images', files[i]);
+        }
+        formData.append('filename', filename);
+
+        fetch('/bulk_upload_images/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    fileCount += files.length;
+                    fileCountElement.textContent = `Files Uploaded: ${fileCount}`;
+                } else {
+                    alert('Failed to upload images.');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading images:', error);
+            });
+    }
+
+    function goBack() {
+        window.history.back();
+    }
+</script>
+{% endblock %}
+
+</html>

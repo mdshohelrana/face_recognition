@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+{% load static %}
+
+<head>
+    <title>Live Streaming</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+
+        #webcam {
+            width: 80%;
+            max-width: 600px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button-container button:hover {
+            background-color: #555;
+        }
+
+        #filenameInput {
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        #fileCount {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+{% block content %}
+<input type="hidden" value="{{ foldername }}" readonly type="text" id="filenameInput" placeholder="Enter filename">
+<video id="webcam" autoplay></video>
+<div class="button-container">
+    <button id="backBtn" onclick="goBack()">Back</button>
+    <div id="fileCount">Files Saved: 0</div>
+    <button id="captureBtn" onclick="captureImage()">Capture Image</button>
+</div>
+
+<script>
+    const webcam = document.getElementById('webcam');
+    const filenameInput = document.getElementById('filenameInput');
+    const fileCountElement = document.getElementById('fileCount');
+    let fileCount = 0;
+
+    async function startWebcam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            webcam.srcObject = stream;
+        } catch (error) {
+            console.error('Error accessing webcam:', error);
+        }
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function captureImage() {
+        const filename = filenameInput.value.trim();
+        if (!filename) {
+            alert('Please enter a filename.');
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = webcam.videoWidth;
+        canvas.height = webcam.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+        const imgDataUrl = canvas.toDataURL('image/png');
+
+        saveImageToServer(filename, imgDataUrl);
+    }
+
+    async function saveImageToServer(filename, imageData) {
+        try {
+            const response = await fetch('/save_image/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({
+                    filename: filename,
+                    imageData: imageData
+                })
+            });
+            if (response.ok) {
+                fileCount++;
+                fileCountElement.textContent = `Files Saved: ${fileCount}`;
+            } else {
+                alert('Failed to save image.');
+            }
+        } catch (error) {
+            console.error('Error saving image:', error);
+        }
+    }
+
+    window.addEventListener('load', () => {
+        startWebcam();
+    });
+
+    function goBack() {
+        window.history.back();
+    }
+</script>
+{% endblock %}
+
+</html>

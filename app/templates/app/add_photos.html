@@ -1,0 +1,130 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+    }
+
+    #myInput {
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 20px;
+      border: none;
+      border-bottom: 2px solid #8f8f8f;
+      background-color: transparent;
+      color: #8f8f8f;
+      transition: border-bottom-color 0.3s ease;
+    }
+
+    #myInput:focus {
+      border-bottom-color: #007bff;
+      outline: none;
+    }
+
+    #myTable {
+      border-collapse: collapse;
+      width: 100%;
+      border: 1px solid #ddd;
+      font-size: 18px;
+    }
+
+    #myTable th,
+    #myTable td {
+      text-align: left;
+      padding: 12px;
+    }
+
+    #myTable tr {
+      border-bottom: 1px solid #ddd;
+    }
+
+    #myTable tr.header,
+    #myTable tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .btn {
+      font-size: 18px;
+      margin: 10px;
+      padding: 10px 20px;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      border: none;
+      text-decoration: none;
+      transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px 0 rgba(0, 123, 255, 0.75);
+    }
+  </style>
+</head>
+
+<body>
+  {% block content %}
+  <div class="container">
+
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for ID..">
+    <br><br>
+
+    <table id="myTable">
+      <tr class="header">
+        <th width="200">ID</th>
+        <th width="300">Name</th>
+        <th width="100">Number of Images</th>
+        <th width="100">Upload</th>
+      </tr>
+
+      {% for emp in emp_list %}
+      <tr>
+        <td>{{ emp.id }}</td>
+        <td><a href="{% url 'stream' emp.id %}">{{ emp.name }}</a></td>
+        <td>{{ emp.num_photos }}</td>
+        <td>
+          <a href="{% url 'bulk' emp.id %}">Bulk Import</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <script>
+      function myFunction() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("myInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("myTable");
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+          td = tr[i].getElementsByTagName("td")[0];
+          if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+              tr[i].style.display = "";
+            } else {
+              tr[i].style.display = "none";
+            }
+          }
+        }
+      }
+    </script>
+    {% endblock %}
+</body>
+
+</html>

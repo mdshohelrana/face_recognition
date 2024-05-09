@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+	.container {
+		background-color: #f8f9fa;
+		border-radius: 10px;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		padding: 20px;
+		margin-top: 50px;
+		text-align: center;
+	}
+
+	.btn {
+		font-size: 18px;
+		margin: 10px;
+		padding: 10px 20px;
+		border-radius: 5px;
+		background: linear-gradient(to right, #007bff, #0056b3);
+		color: white;
+		border: none;
+		text-decoration: none;
+		box-shadow: 0 4px 15px 0 rgba(0, 123, 255, 0.75);
+		transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+	}
+
+	.btn:hover {
+		background: linear-gradient(to right, #0056b3, #007bff);
+		transform: translateY(-2px);
+		box-shadow: 0 6px 15px 0 rgba(0, 123, 255, 0.75);
+	}
+
+	#fileInput {
+		padding: 5px;
+		font-size: 16px;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		margin-bottom: 10px;
+	}
+
+	#fileCount {
+		font-size: 16px;
+		margin-top: 10px;
+	}
+</style>
+
+<div class="container">
+	<h1>Smart Demographic Recognition System</h1>
+	<hr>
+	<div class="buttons">
+		<a class="btn" href="{% url 'live_stream' %}">Live Face Identify</a>
+		<a class="btn" href="{% url 'capture_stream' %}">Live Capture Face Identify</a>
+		<a class="btn" href="{% url 'add_emp' %}">Add Person</a>
+		<a class="btn" href="{% url 'add_photos' %}">Add Photos</a>
+		<a class="btn" href="{% url 'train_model' %}">Train Model</a>
+	</div>
+	<br>
+	<input type="file" id="fileInput" accept="image/*">
+	<div id="results" style="color: rgb(0, 255, 0);"></div>
+	<button class="btn" onclick="processImage()">Process Image</button>
+	<!-- <div id="fileCount">Files Processed: 0</div> -->
+</div>
+
+<script>
+	const fileInput = document.getElementById('fileInput');
+	const fileCountElement = document.getElementById('fileCount');
+	let fileCount = 0;
+
+	function getCookie(name) {
+		var cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			var cookies = document.cookie.split(';');
+			for (var i = 0; i < cookies.length; i++) {
+				var cookie = cookies[i].trim();
+				if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
+	}
+
+	const csrftoken = getCookie('csrftoken');
+
+	function processImage() {
+		const file = fileInput.files[0];
+		if (!file) {
+			alert('Please select a file first!');
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = function (event) {
+			saveImageToServer(event.target.result);
+		};
+		reader.readAsDataURL(file);
+	}
+
+	async function saveImageToServer(imageData) {
+		try {
+			const response = await fetch('/predict_image/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRFToken': csrftoken,
+				},
+				body: JSON.stringify({
+					imageData: imageData
+				})
+			});
+			if (response.ok) {
+				fileCount++;
+				fileCountElement.textContent = `Files Processed: ${fileCount}`;
+				const data = await response.json();
+				if (data.success) {
+					displayPredictions(data.predictions);
+				} else {
+					alert('Failed to predict image.');
+				}
+			} else {
+				alert('Failed to save image.');
+			}
+		} catch (error) {
+			console.error('Error saving image:', error);
+		}
+	}
+
+	function displayPredictions(predictions) {
+		const resultsDiv = document.getElementById('results');
+		resultsDiv.innerHTML = '';  // Clear previous results
+		predictions.forEach(pred => {
+			const predDiv = document.createElement('div');
+			predDiv.innerHTML = `Name: ${pred.name}`;
+			resultsDiv.appendChild(predDiv);
+		});
+	}
+</script>
+{% endblock %}

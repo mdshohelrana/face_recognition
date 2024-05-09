@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Live Face Detection</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+
+        #webcam-container {
+            position: relative;
+            width: 80%;
+            max-width: 600px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        #webcam {
+            width: 100%;
+            height: auto;
+        }
+
+        .bounding-box {
+            position: absolute;
+            border: 2px solid red;
+            box-sizing: border-box;
+            pointer-events: none;
+            /* Ensures clicks pass through the bounding box */
+        }
+
+        .label {
+            position: absolute;
+            background-color: red;
+            color: white;
+            padding: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            /* Ensures clicks pass through the label */
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button-container button:hover {
+            background-color: #555;
+        }
+
+        #fileCount {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="webcam-container">
+        <video id="webcam" autoplay></video>
+        <div id="boundingBoxes"></div>
+    </div>
+    <div class="button-container">
+        <button id="backBtn" onclick="goBack()">Back</button>
+        <div id="fileCount">Files Processed: 0</div>
+    </div>
+
+    <script>
+        const webcam = document.getElementById('webcam');
+        const boundingBoxesContainer = document.getElementById('boundingBoxes');
+        let fileCount = 0;
+        let fileCountElement = document.getElementById('fileCount');
+
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcam.srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+            }
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        async function captureImageAndPredict() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = webcam.videoWidth;
+            canvas.height = webcam.videoHeight;
+            ctx.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+            const imgDataUrl = canvas.toDataURL('image/png');
+
+            try {
+                const response = await fetch('/predict_image/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({
+                        imageData: imgDataUrl
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    fileCount++;
+                    if (fileCount == 30) {
+                        window.history.back()
+                    }
+                    fileCountElement.textContent = `Files Processed: ${fileCount}/30`;
+                    boundingBoxesContainer.innerHTML = ''; // Clear previous bounding boxes
+                    data.predictions.forEach(pred => {
+                        const scale = webcam.videoWidth / canvas.width;
+                        const [top, right, bottom, left] = [pred.coordinates.top, pred.coordinates.right, pred.coordinates.bottom, pred.coordinates.left].map(x => x * scale);
+                        const boundingBox = document.createElement('div');
+                        boundingBox.classList.add('bounding-box');
+                        boundingBox.style.top = `${top}px`;
+                        boundingBox.style.left = `${left}px`;
+                        boundingBox.style.width = `${right - left}px`;
+                        boundingBox.style.height = `${bottom - top}px`;
+                        const label = document.createElement('div');
+                        label.classList.add('label');
+                        label.textContent = pred.name;
+                        label.style.top = `${top}px`;
+                        label.style.left = `${left}px`;
+                        boundingBoxesContainer.appendChild(boundingBox);
+                        boundingBoxesContainer.appendChild(label);
+                    });
+                }
+            } catch (error) {
+                console.error('Error predicting image:', error);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            startWebcam();
+            setInterval(captureImageAndPredict, 1000); // Capture and predict every second
+        });
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+
+</html>
